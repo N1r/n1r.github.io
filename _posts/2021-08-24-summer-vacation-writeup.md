@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Summary of pre-semester
-date: 2021-08-24 11:12:00-0400
+date: 2021-08-23 11:12:00-0400
 description: write-up.
 ---
 
