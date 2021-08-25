@@ -150,3 +150,17 @@ model = get_cnn_model(input_shape, classes)
 
 history = model.fit(X_train, y_train, batch_size=20, epochs=15, verbose=1, validation_split=0.2, class_weight=class_weights)
 ```
+
+最终结果 ：
+
+模型
+![model](/assets/img/model-summary.png)
+
+测试集上的混淆矩阵
+
+![conf](/assets/img/confus.png)
+
+基本上训练的很好，但是可能有点过拟合了哈，不知道集外的数据如何。
+
+
+![app](/assets/img/screenshot.png)

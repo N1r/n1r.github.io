@@ -17,7 +17,11 @@ selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
 ---
 Ph.d-Candidate,
+
 Speech, music and Brain,
+
 python & R enthusiast,
+
 追求事实，而非真理，
-Once more onto the brench,once more. Etc.
+
+Once more onto the brench,once more.
