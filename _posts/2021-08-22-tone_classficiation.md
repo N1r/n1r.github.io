@@ -1,6 +1,6 @@
 ---
 layout: post
-title: post about tensorflow and tone classficiation
+title: CNN model for Mandarin tone classfication
 date: 2021-08-22 11:12:00-0400
 description: some notes.
 ---
@@ -163,4 +163,6 @@ history = model.fit(X_train, y_train, batch_size=20, epochs=15, verbose=1, valid
 基本上训练的很好，但是可能有点过拟合了哈，不知道集外的数据如何。
 
 
-![app](/assets/img/screenshot.png)
+试图使用gradio制作一个可交互app
+> Generate an easy-to-use demo for your ML model or function with only a few lines of code.
+![app](/assets/img/screenshot.png){:height="50%" width="50%"}

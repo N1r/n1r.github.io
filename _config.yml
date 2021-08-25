@@ -2,7 +2,7 @@
 # Site settings
 # -----------------------------------------------------------------------------
 
-title: blank # the website title (if blank, full name will be used instead)
+title: Stargazer # the website title (if blank, full name will be used instead)
 first_name: Yiran
 middle_name: (N1r)
 last_name: Ding
@@ -77,7 +77,7 @@ panelbear_analytics: XXXXXXXXX # panelbear analytics site ID
 # -----------------------------------------------------------------------------
 
 blog_name: Speech, music and Brain, Wow~  # your blog must have a name for it to show up in the nav bar
-blog_description:
+blog_description: mainly note & some thoughts
 permalink: /blog/:year/:title/
 
 # Pagination

@@ -40,7 +40,7 @@ power.plot(['MEG 1332'])
 
 # Learning
 - Machine learning - related tools and knowledge
--- tensorflow & keras (hard!!)
+-- tensorflow & keras (hard!! as hell)
 -- pytroch
 
 Resources：
