@@ -81,7 +81,7 @@ plt.show()
 
 数据准备  
 
-```Python
+```python
 # import some necessary packages
 
 import tensorflow as tf
@@ -100,7 +100,7 @@ import math
 import os
 ```
 
-```Python
+```python
 # 定义模型
 def get_cnn_model(input_shape, num_classes):
     model = Sequential()
@@ -126,7 +126,7 @@ def get_cnn_model(input_shape, num_classes):
 为了更方便的理解模型，可使用 model.summary ( After training.)
 
 数据预处理中，使用liborsa提取mfcc参数，此处提取60维mfcc参数，对全部语音进行首尾静音段的切除，最后padding到150帧，最后将数据转换为np.array并保存。最终训练数据 维度为（9199,60,150,1)
-```Python
+```python
 def wav2mfcc(file_path, max_pad):
   # 使用librosa读取音频时，可能遇到soundfile的依赖错误，此时可以选择重新安装soundfile包，或直接使用soundfile进行读取，读取后的音频 audio 和 sample rate 和 librosa无差异。
   #audio, sample_rate = librosa.core.load(file_path)
@@ -137,14 +137,14 @@ def wav2mfcc(file_path, max_pad):
 ```
 对 数据标签进行one-hot编码，即 将1 2 3 4 的离散数值，转换为 [0,0,0,0,1] [0,0,0,1,0] [0,0,1,0,0] [0,1,0,0,] 可以使用 keras自带的 to_categorical
 
-```Python
+```python
 from keras.utils import to_categorical
 labels = to_categorical(labels, num_classes=None)
 print(labels.shape)
 ```
 
 训练和测试
-```Python
+```python
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
 model = get_cnn_model(input_shape, classes)
 
