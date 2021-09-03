@@ -5,6 +5,12 @@ date: 2021-08-22 11:12:00-0400
 description: some notes.
 ---
 
+<style>
+img{
+    width: 80%;
+    padding-left: 20%;
+}
+</style>
 
 ## 今日总结
 
@@ -21,6 +27,7 @@ ToneNet (https://github.com/saber5433/ToneNet)。
 作者使用了CASS语料库，即中文标准音节发音语料库，因为商业性(费用约2000元)暂时搁置，此类语料库也有*Tone Perfect dataset from Michigan State University* (https://tone.lib.msu.edu/).
 > The Tone Perfect collection includes the full catalog of monosyllabic sounds in Mandarin Chinese (410 in total) in all four tones (410 x 4 = 1,640). Spoken by six native Mandarin speakers (three female and three male), the collection is comprised of 9,860 audio files (6 sets of 1,640).  如图所示为该语料库所提供的标准范例。
 ![tone_perfect](/assets/img/tone_perfect.png)
+
 使用该数据库需要先填写申请表，已经提交，但尚未有工作人员回应，继续等待中。
 
 故而先行使使用BLCU-SAIT的小部分语料库中的单音节，总计约10000条不同的语音片段，来自3男3女，每位发音人产出1520个不同声调的单音节。
@@ -165,4 +172,13 @@ history = model.fit(X_train, y_train, batch_size=20, epochs=15, verbose=1, valid
 
 试图使用gradio制作一个可交互app
 > Generate an easy-to-use demo for your ML model or function with only a few lines of code.
-![app](/assets/img/screenshot.png){:height="50%" width="50%"}
+
+
+![app](/assets/img/screenshot.png)
+
+<!--
+<div  align="center">    
+
+<img alt="screenshot.png" src="/assets/img/screenshot.png" width="600" height="600">
+
+</div> -->
