@@ -1,3 +1,11 @@
+---
+layout: post
+title: Summary of ding_ning_shap_project
+date: 2022-07-03 11:12:00-0400
+description: write-up.
+---
+
+
 ## doing basic preprocessing
 
 # 
