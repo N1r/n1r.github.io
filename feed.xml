@@ -1,0 +1,982 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.2">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2022-07-09T22:07:17+00:00</updated><id>/feed.xml</id><title type="html">Stargazer</title><subtitle>Sharing experience of My academical journery.
+</subtitle><entry><title type="html">Summary of ding_ning_shap_project</title><link href="/blog/2022/shap-dingning/" rel="alternate" type="text/html" title="Summary of ding_ning_shap_project" /><published>2022-07-03T15:12:00+00:00</published><updated>2022-07-03T15:12:00+00:00</updated><id>/blog/2022/shap-dingning</id><content type="html" xml:base="/blog/2022/shap-dingning/"><![CDATA[<h2 id="doing-basic-preprocessing">doing basic preprocessing</h2>
+
+<p>#</p>
+
+<p>import shap
+import pandas as pd</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pyreadstat</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s">'ding_ning_all_origin.sav'</span>
+<span class="n">df</span><span class="p">,</span> <span class="n">meta</span> <span class="o">=</span> <span class="n">pyreadstat</span><span class="p">.</span><span class="n">read_sav</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">'gbk'</span><span class="p">)</span>
+
+<span class="n">Y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'group'</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">270</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">.</span><span class="n">columns</span>
+
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Index(['group', 'Zphonedeletion', 'Zonsetrime', 'ZSpoonerism', 'ZRANdigit',
+       'ZRANpic', 'ZRANdice', 'ZRANcolor', 'ZDigitSpan', 'ZMA', 'Z假字', 'Z部件错误',
+       'Z位置错误', 'Z线条图', 'ZNumberACC', 'ZSymbolACC', 'ZColorACC', 'ZChineseACC',
+       'age', 'IQper', 'Gender', '父亲最高学历（问卷星）', '母亲最高学历（问卷星）', '姓名', '学号',
+       'Zphonologicalaccuracy', 'Zphonologicalspeed', 'ZOaverage', '认知缺陷1.5SD',
+       'Z正字法', 'SESnew', 'SES分组', 'Zacc', 'paper', 'SESQ', 'expriment2',
+       'VAR00001', 'Zphonologicalskills13', 'ZPA11', '父亲', '母亲', '亚类型认知缺陷',
+       'PA3', 'RAN', 'RAN数字平均时间', 'RAN筛子平均时间', 'RAN图片平均时间', 'RAN颜色平均时间',
+       '语音环境交互', 'SES交互（PA）', 'ZVAS', '汉字识别任务得分', '学校', 'Grade', '语素', 'Z语素重评',
+       'Spoonerism', '声母、韵母删除测验', '音位删除测验得分', '正字法', '假字', '部件错误', '位置错误',
+       '线条图', 'DS', '顺序', '倒序', '表征', '智力分数', '智力等级', '障碍1.5SD', 'ZPA3_RAN',
+       '认知缺陷', '词表朗读时间', 'Z词表朗读时间', 'Z词表朗读反', 'ZVAS_verbal', 'ZVAS_nonverbal',
+       '词表朗读得分', '顺序得分', '倒序得分', 'PA2', 'Zrepresentation', '语素产生得分原来',
+       'Z语素产生得分', 'ZPA声母韵母音位删除', '亚类型8.7', '亚类型', 'VAS_verbal',
+       'VAS_nonverbal', 'VAS', 'filter_$', 'ChineseACC', 'NumberACC',
+       'SymbolACC', 'ColorACC', 'RAN环境交互', '语素环境交互'],
+      dtype='object')
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'姓名'</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">270</span><span class="p">]</span>
+<span class="n">number</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'学号'</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">270</span><span class="p">]</span>
+
+
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">needed_col</span> <span class="o">=</span> <span class="p">[</span><span class="s">'Zphonedeletion'</span><span class="p">,</span><span class="s">'Zonsetrime'</span><span class="p">,</span><span class="s">'ZSpoonerism'</span><span class="p">,</span><span class="s">'ZRANdigit'</span><span class="p">,</span><span class="s">'ZRANpic'</span><span class="p">,</span><span class="s">'ZRANcolor'</span><span class="p">,</span><span class="s">'ZDigitSpan'</span><span class="p">,</span>
+             <span class="s">'ZMA'</span><span class="p">,</span><span class="s">'Z假字'</span><span class="p">,</span><span class="s">'Z部件错误'</span><span class="p">,</span><span class="s">'Z位置错误'</span><span class="p">,</span><span class="s">'Z线条图'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">needed_col</span> <span class="o">=</span> <span class="p">[</span><span class="s">'Zphonedeletion'</span><span class="p">,</span><span class="s">'Zonsetrime'</span><span class="p">,</span><span class="s">'ZSpoonerism'</span><span class="p">,</span><span class="s">'ZRANdigit'</span><span class="p">,</span><span class="s">'ZRANpic'</span><span class="p">,</span><span class="s">'ZRANcolor'</span><span class="p">,</span><span class="s">'ZDigitSpan'</span><span class="p">,</span>
+             <span class="s">'ZMA'</span><span class="p">,</span><span class="s">'ZOaverage'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># needed_col = ['Zphonedeletion','Zonsetrime','ZSpoonerism','ZRANdigit','ZRANpic','ZRANdice','ZRANcolor','ZDigitSpan',
+#              'ZMA','Z假字','Z部件错误','Z位置错误','Z线条图'
+#              ]
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">dict_to_replace</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">'Z假字'</span> <span class="p">:</span> <span class="s">'ZPseudoC'</span><span class="p">,</span>
+    <span class="s">'Z部件错误'</span> <span class="p">:</span> <span class="s">'ZIll-formed component'</span><span class="p">,</span>
+    <span class="s">'Z位置错误'</span> <span class="p">:</span> <span class="s">'ZIllegal position'</span><span class="p">,</span>
+    <span class="s">'Z线条图'</span><span class="p">:</span> <span class="s">'ZBW_drawings'</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df_need</span> <span class="o">=</span> <span class="n">df</span><span class="p">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">needed_col</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">270</span><span class="p">]</span>
+<span class="n">qq</span> <span class="o">=</span> <span class="n">df_need</span><span class="p">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s">'polynomial'</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df2</span> <span class="o">=</span> <span class="n">qq</span><span class="p">.</span><span class="n">rename</span><span class="p">(</span><span class="n">dict_to_replace</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># new method
+</span><span class="n">X</span> <span class="o">=</span> <span class="n">df2</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">new_colums</span> <span class="o">=</span> <span class="p">[</span><span class="s">'Phoneme Deleltion'</span><span class="p">,</span> <span class="s">'Onset rime Deletion'</span><span class="p">,</span> <span class="s">'Spoonerism'</span><span class="p">,</span> <span class="s">'RAN Digits'</span><span class="p">,</span> <span class="s">'RAN Pictures'</span><span class="p">,</span>
+       <span class="s">'RAN Color'</span><span class="p">,</span> <span class="s">'Digit Span'</span><span class="p">,</span> <span class="s">'Morphological Awareness'</span><span class="p">,</span> <span class="s">'Pseudo-character'</span><span class="p">,</span> <span class="s">'Ill-formed Component'</span><span class="p">,</span>
+       <span class="s">'Illegal Position'</span><span class="p">,</span> <span class="s">'Black-and-white Drawings'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">new_colums</span> <span class="o">=</span> <span class="p">[</span><span class="s">'Phoneme Deleltion'</span><span class="p">,</span> <span class="s">'Onset And Rime Deletion'</span><span class="p">,</span> <span class="s">'Spoonerism'</span><span class="p">,</span> <span class="s">'RAN Digits'</span><span class="p">,</span> <span class="s">'RAN Pictures'</span><span class="p">,</span>
+       <span class="s">'RAN Color'</span><span class="p">,</span> <span class="s">'Digit Span'</span><span class="p">,</span> <span class="s">'Morphological Awareness'</span><span class="p">,</span><span class="s">'Orthographic Awareness'</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X</span><span class="p">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">new_colums</span>
+</code></pre></div></div>
+
+<h2 id="doing-classifcation">doing classifcation</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">import</span> <span class="nn">xgboost</span> <span class="k">as</span> <span class="n">xgb</span>
+
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span> <span class="n">Y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> 
+         <span class="n">test_size</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">=</span> <span class="mi">1234</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">xgb_model</span> <span class="o">=</span> <span class="n">xgb</span><span class="p">.</span><span class="n">XGBRFClassifier</span><span class="p">()</span>
+<span class="c1">#xgb_model = xgb.XGBRegressor()
+#xgb_model = xgb.XGBClassifier()
+</span>
+<span class="n">xgb_model</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[16:16:51] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+
+
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\sklearn.py:1146: UserWarning: The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+  warnings.warn(label_encoder_deprecation_msg, UserWarning)
+
+
+
+
+
+XGBRFClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
+                colsample_bytree=1, gamma=0, gpu_id=-1, importance_type='gain',
+                interaction_constraints='', max_delta_step=0, max_depth=6,
+                min_child_weight=1, missing=nan, monotone_constraints='()',
+                n_estimators=100, n_jobs=16, num_parallel_tree=100,
+                objective='binary:logistic', random_state=0, reg_alpha=0,
+                scale_pos_weight=1, tree_method='exact', validate_parameters=1,
+                verbosity=None)
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 预测下 X
+</span>                
+                
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">xgb_model</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+
+<span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">metrics</span><span class="p">.</span><span class="n">roc_curve</span><span class="p">(</span><span class="n">Y_train</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="n">metrics</span><span class="p">.</span><span class="n">auc</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+
+
+
+
+
+0.930839495432797
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
+
+
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">xgb_model</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">accuracy_score</span><span class="p">(</span><span class="n">Y_test</span> <span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>83.33333333333334
+
+
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="n">sns</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+
+<span class="c1"># cm
+</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">xgb_model</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">cf_matrix</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+
+<span class="n">group_counts</span> <span class="o">=</span> <span class="p">[(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">cf_matrix</span><span class="p">.</span><span class="n">flatten</span><span class="p">()]</span>
+<span class="n">group_percentages</span> <span class="o">=</span> <span class="p">[</span><span class="s">'{0:.2%}'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">cf_matrix</span><span class="p">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">/</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">cf_matrix</span><span class="p">)]</span>
+
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">v1</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">v2</span><span class="si">}</span><span class="se">\n</span><span class="s">'</span> <span class="k">for</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">group_counts</span><span class="p">,</span><span class="n">group_percentages</span><span class="p">)]</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">labels</span><span class="p">).</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">sns</span><span class="p">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">cf_matrix</span><span class="o">/</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">cf_matrix</span><span class="p">),</span> <span class="n">annot</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s">''</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s">'Blues'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">'all.pdf'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+</code></pre></div></div>
+
+<p><img src="output_21_1.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="n">sns</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+
+
+<span class="c1"># cm
+</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">xgb_model</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+<span class="n">cf_matrix</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">Y_train</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+
+
+<span class="n">sns</span><span class="p">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">cf_matrix</span><span class="o">/</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">cf_matrix</span><span class="p">),</span> <span class="n">annot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> 
+<span class="n">fmt</span><span class="o">=</span><span class="s">'.2%'</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s">'Blues'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+
+
+
+
+
+&lt;AxesSubplot:&gt;
+</code></pre></div></div>
+
+<p><img src="output_23_2.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">auc</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">RocCurveDisplay</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">StratifiedKFold</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">ConfusionMatrixDisplay</span>
+
+
+<span class="c1"># good point 88
+</span>
+<span class="c1"># set point 8 
+</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># cm
+</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">xgb_model</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+<span class="n">cm</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">Y_train</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="n">cm_display</span> <span class="o">=</span> <span class="n">ConfusionMatrixDisplay</span><span class="p">(</span><span class="n">cm</span><span class="p">).</span><span class="n">plot</span><span class="p">(</span><span class="n">cmap</span><span class="o">=</span><span class="s">'Blues'</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+</code></pre></div></div>
+
+<p><img src="output_25_1.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cv</span> <span class="o">=</span> <span class="n">StratifiedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">random_state</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span>
+<span class="c1"># 交叉验证 轮数
+</span>
+<span class="n">tprs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">aucs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">mean_fpr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+<span class="c1"># ROC_5_fold
+</span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="p">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cv</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)):</span>
+    <span class="n">xgb_model</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train</span><span class="p">],</span> <span class="n">Y</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train</span><span class="p">])</span>
+    <span class="n">viz</span> <span class="o">=</span> <span class="n">RocCurveDisplay</span><span class="p">.</span><span class="n">from_estimator</span><span class="p">(</span>
+        <span class="n">xgb_model</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test</span><span class="p">],</span>
+        <span class="n">Y</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test</span><span class="p">],</span>
+        <span class="n">name</span><span class="o">=</span><span class="s">"ROC fold {}"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">interp_tpr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">interp</span><span class="p">(</span><span class="n">mean_fpr</span><span class="p">,</span> <span class="n">viz</span><span class="p">.</span><span class="n">fpr</span><span class="p">,</span> <span class="n">viz</span><span class="p">.</span><span class="n">tpr</span><span class="p">)</span>
+    <span class="n">interp_tpr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">tprs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">interp_tpr</span><span class="p">)</span>
+    <span class="n">aucs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">viz</span><span class="p">.</span><span class="n">roc_auc</span><span class="p">)</span>
+    <span class="n">mean_tpr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tprs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mean_tpr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">mean_auc</span> <span class="o">=</span> <span class="n">auc</span><span class="p">(</span><span class="n">mean_fpr</span><span class="p">,</span> <span class="n">mean_tpr</span><span class="p">)</span>
+    <span class="n">std_auc</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">aucs</span><span class="p">)</span>
+    <span class="n">std_tpr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">tprs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">tprs_upper</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">mean_tpr</span> <span class="o">+</span> <span class="n">std_tpr</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">tprs_lower</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">mean_tpr</span> <span class="o">-</span> <span class="n">std_tpr</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>C:\ProgramData\Anaconda3\lib\site-packages\xgboost\sklearn.py:1146: UserWarning: The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+  warnings.warn(label_encoder_deprecation_msg, UserWarning)
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\sklearn.py:1146: UserWarning: The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+  warnings.warn(label_encoder_deprecation_msg, UserWarning)
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+
+
+[13:04:07] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+[13:04:07] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+[13:04:07] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+
+
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\sklearn.py:1146: UserWarning: The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+  warnings.warn(label_encoder_deprecation_msg, UserWarning)
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\sklearn.py:1146: UserWarning: The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+  warnings.warn(label_encoder_deprecation_msg, UserWarning)
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\sklearn.py:1146: UserWarning: The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+  warnings.warn(label_encoder_deprecation_msg, UserWarning)
+
+
+[13:04:07] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+[13:04:07] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+
+
+C:\ProgramData\Anaconda3\lib\site-packages\xgboost\data.py:112: UserWarning: Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+  warnings.warn(
+</code></pre></div></div>
+
+<p><img src="output_26_5.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">shap</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="p">.</span><span class="n">TreeExplainer</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">)</span>
+<span class="n">shap_values</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">bar</span><span class="p">(</span><span class="n">shap_values</span><span class="p">,</span> <span class="n">max_display</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">show</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="c1"># default is max_display=12
+#plt.savefig('importance_xgb.pdf', format='pdf', dpi=1200, bbox_inches='tight')
+#plt.close()
+</span></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ntree_limit is deprecated, use `iteration_range` or model slicing instead.
+</code></pre></div></div>
+
+<p><img src="output_27_1.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">qq</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">X</span><span class="p">.</span><span class="n">index</span> <span class="o">==</span> <span class="mi">80</span><span class="p">]</span>
+<span class="c1"># 获取特殊的 index
+</span><span class="k">print</span><span class="p">(</span><span class="s">'model prediction is {}'</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">qq</span><span class="p">)))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">'probability is '</span><span class="p">,</span><span class="n">xgb_model</span><span class="p">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">qq</span><span class="p">))</span>
+
+<span class="n">shap_values</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">qq</span><span class="p">)</span>
+<span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">force</span><span class="p">(</span><span class="n">shap_values</span><span class="p">,</span><span class="n">show</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">link</span><span class="o">=</span><span class="s">'logit'</span><span class="p">)</span>
+<span class="c1"># 80 
+</span></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>model prediction is [1.]
+probability is  [[0.15268368 0.8473163 ]]
+</code></pre></div></div>
+
+<div id="iDNLUEMUVOVKC6MAG6YT4">
+<div style="color: #900; text-align: center;">
+  <b>Visualization omitted, Javascript library not loaded!</b><br />
+  Have you run `initjs()` in this notebook? If this notebook was from another
+  user you must also trust this notebook (File -&gt; Trust notebook). If you are viewing
+  this notebook on github the Javascript has been stripped for security. If you are using
+  JupyterLab this error is because a JupyterLab extension has not yet been written.
+</div></div>
+<script>
+   if (window.SHAP) SHAP.ReactDom.render(
+    SHAP.React.createElement(SHAP.AdditiveForceVisualizer, {"outNames": ["f(x)"], "baseValue": -0.16673779487609863, "outValue": 1.7137058973312378, "link": "logit", "featureNames": ["Phoneme Deleltion", "Onset And Rime Deletion", "Spoonerism", "RAN Digits", "RAN Pictures", "RAN Color", "Digit Span", "Morphological Awareness", "Orthographic Awareness"], "features": {"0": {"effect": -0.23587824404239655, "value": 0.7749429401523535}, "1": {"effect": -0.08121000975370407, "value": 1.07153444825783}, "2": {"effect": 0.15782789885997772, "value": -0.6084258121114408}, "3": {"effect": 0.4541446268558502, "value": -0.9361724093562387}, "4": {"effect": 1.3624547719955444, "value": -1.5288467871784706}, "5": {"effect": 0.24427823722362518, "value": -1.6377341835611197}, "6": {"effect": -0.023947343230247498, "value": 0.6253291418193571}, "7": {"effect": 0.03347970172762871, "value": -0.5528771141314316}, "8": {"effect": -0.030705774202942848, "value": 0.18018825214734946}}, "plot_cmap": "RdBu", "labelMargin": 20}),
+    document.getElementById('iDNLUEMUVOVKC6MAG6YT4')
+  );
+</script>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">## 双括号 获取列
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+
+<span class="n">ding</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">read_excel</span><span class="p">(</span><span class="s">'longlong.xlsx'</span><span class="p">)</span>
+<span class="n">needed</span> <span class="o">=</span> <span class="n">ding</span><span class="p">[</span><span class="s">'ID'</span><span class="p">].</span><span class="n">tolist</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Unknown extension is not supported and will be removed
+Conditional Formatting extension is not supported and will be removed
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">len</span><span class="p">(</span><span class="n">needed</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>21
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X</span><span class="p">[</span><span class="s">'group'</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">all_dyxia</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">X</span><span class="p">[</span><span class="s">'group'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="nb">len</span><span class="p">(</span><span class="n">all_dyxia</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>123
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">name</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'姓名'</span><span class="p">][</span><span class="n">df</span><span class="p">[</span><span class="s">'group'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">number</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'学号'</span><span class="p">][</span><span class="n">df</span><span class="p">[</span><span class="s">'group'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">prediction</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">prediction_prob_0</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">prediction_prob_1</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_dyxia</span><span class="p">)):</span>
+    <span class="n">qq</span> <span class="o">=</span> <span class="n">all_dyxia</span><span class="p">.</span><span class="n">iloc</span><span class="p">[[</span><span class="n">i</span><span class="p">]].</span><span class="n">drop</span><span class="p">([</span><span class="s">'group'</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># 获取特殊的 index
+</span>    <span class="n">prediction</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">qq</span><span class="p">))</span>
+    <span class="n">prediction_prob_0</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">qq</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">prediction_prob_1</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">qq</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_dyxia</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="s">'prediction'</span><span class="p">]</span> <span class="o">=</span> <span class="n">prediction</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="s">'prediction_prob_0'</span><span class="p">]</span> <span class="o">=</span> <span class="n">prediction_prob_0</span>
+<span class="n">df</span><span class="p">[</span><span class="s">'prediction_prob_1'</span><span class="p">]</span> <span class="o">=</span> <span class="n">prediction_prob_1</span>
+<span class="n">df</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span> 
+<span class="n">df</span><span class="p">[</span><span class="s">'number'</span><span class="p">]</span> <span class="o">=</span> <span class="n">number</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s">'预测和概率_全部.xlsx'</span><span class="p">,</span><span class="n">encoding</span><span class="o">=</span><span class="s">'UTF-8'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pdfkit</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_dyxia</span><span class="p">)):</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">force</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">show</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">link</span><span class="o">=</span><span class="s">'logit'</span><span class="p">)</span>
+    <span class="n">shap</span><span class="p">.</span><span class="n">save_html</span><span class="p">(</span><span class="s">"all/index{}.html"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span>
+    <span class="c1">#pdfkit.from_file("index{}.html".format(i),"index{}.pdf".format(i),configuration=config,options={'javascript-delay':'5000'})
+</span>    
+<span class="c1">#shap.save_html("index.htm", f)
+# default is max_display=12
+#plt.savefig('importance_xgb1.pdf', format='pdf', dpi=1200, bbox_inches='tight')
+#plt.close()
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pdfkit</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">needed</span><span class="p">:</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">force</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">show</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">link</span><span class="o">=</span><span class="s">'logit'</span><span class="p">)</span>
+    <span class="n">shap</span><span class="p">.</span><span class="n">save_html</span><span class="p">(</span><span class="s">"index{}.html"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span>
+    <span class="c1">#pdfkit.from_file("index{}.html".format(i),"index{}.pdf".format(i),configuration=config,options={'javascript-delay':'5000'})
+</span>    
+<span class="c1">#shap.save_html("index.htm", f)
+# default is max_display=12
+#plt.savefig('importance_xgb1.pdf', format='pdf', dpi=1200, bbox_inches='tight')
+#plt.close()
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">force</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">link</span><span class="o">=</span><span class="s">'logit'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div id="iDA410TJJN62F28DE1MP4">
+<div style="color: #900; text-align: center;">
+  <b>Visualization omitted, Javascript library not loaded!</b><br />
+  Have you run `initjs()` in this notebook? If this notebook was from another
+  user you must also trust this notebook (File -&gt; Trust notebook). If you are viewing
+  this notebook on github the Javascript has been stripped for security. If you are using
+  JupyterLab this error is because a JupyterLab extension has not yet been written.
+</div></div>
+<script>
+   if (window.SHAP) SHAP.ReactDom.render(
+    SHAP.React.createElement(SHAP.AdditiveForceVisualizer, {"outNames": ["f(x)"], "baseValue": -0.16673779487609863, "outValue": 1.465014934539795, "link": "logit", "featureNames": ["Phoneme Deleltion", "Onset And Rime Deletion", "Spoonerism", "RAN Digits", "RAN Pictures", "RAN Color", "Digit Span", "Morphological Awareness", "Orthographic Awareness"], "features": {"0": {"effect": 0.3182767331600189, "value": -1.8975079869375957}, "1": {"effect": 0.1109856516122818, "value": -0.7459929816923448}, "2": {"effect": 0.9327531456947327, "value": -2.16523337312765}, "3": {"effect": 0.18342353403568268, "value": -0.7751757748181646}, "4": {"effect": -0.4676022529602051, "value": 0.3531436664827868}, "5": {"effect": 0.20008407533168793, "value": -0.02607880949466546}, "6": {"effect": 0.05061537027359009, "value": -1.183243617792014}, "7": {"effect": 0.3350757360458374, "value": -0.7655661383888168}, "8": {"effect": -0.03185942769050598, "value": -0.09697312463962388}}, "plot_cmap": "RdBu", "labelMargin": 20}),
+    document.getElementById('iDA410TJJN62F28DE1MP4')
+  );
+</script>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">force</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span><span class="n">link</span><span class="o">=</span><span class="s">'identity'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div id="iUADBCST8NGXW6IEEDSW0">
+<div style="color: #900; text-align: center;">
+  <b>Visualization omitted, Javascript library not loaded!</b><br />
+  Have you run `initjs()` in this notebook? If this notebook was from another
+  user you must also trust this notebook (File -&gt; Trust notebook). If you are viewing
+  this notebook on github the Javascript has been stripped for security. If you are using
+  JupyterLab this error is because a JupyterLab extension has not yet been written.
+</div></div>
+<script>
+   if (window.SHAP) SHAP.ReactDom.render(
+    SHAP.React.createElement(SHAP.AdditiveForceVisualizer, {"outNames": ["f(x)"], "baseValue": -0.16673779487609863, "outValue": 1.9166638851165771, "link": "identity", "featureNames": ["Phoneme Deleltion", "Onset And Rime Deletion", "Spoonerism", "RAN Digits", "RAN Pictures", "RAN Color", "Digit Span", "Morphological Awareness", "Orthographic Awareness"], "features": {"0": {"effect": 0.32180291414260864, "value": -2.899677084596327}, "1": {"effect": 0.06779388338327408, "value": -1.1094984676823798}, "2": {"effect": 0.3874700963497162, "value": -2.16523337312765}, "3": {"effect": 0.3190848231315613, "value": -1.0394986076418686}, "4": {"effect": 0.8858121037483215, "value": -1.152174753148743}, "5": {"effect": 0.24478191137313843, "value": -1.4951098141747072}, "6": {"effect": 0.03803250938653946, "value": -0.7311004278891712}, "7": {"effect": -0.16684700548648834, "value": 1.4558008178248205}, "8": {"effect": -0.014529730193316936, "value": 0.010532123708859586}}, "plot_cmap": "RdBu", "labelMargin": 20}),
+    document.getElementById('iUADBCST8NGXW6IEEDSW0')
+  );
+</script>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pdfkit</span>
+<span class="n">path_wkhtmltopdf</span> <span class="o">=</span> <span class="sa">r</span><span class="s">'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">pdfkit</span><span class="p">.</span><span class="n">configuration</span><span class="p">(</span><span class="n">wkhtmltopdf</span><span class="o">=</span><span class="n">path_wkhtmltopdf</span><span class="p">)</span>
+<span class="c1">#pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
+</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">imgkit</span>
+
+
+<span class="n">pdfkit</span><span class="p">.</span><span class="n">from_file</span><span class="p">(</span><span class="s">"index{}.html"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="s">"index{}.pdf"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">configuration</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>True
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">waterfall</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="mi">66</span><span class="p">],</span><span class="n">show</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c1"># For the first observation
+#plt.savefig('case1.pdf', format='pdf', dpi=1200, bbox_inches='tight')
+#plt.close()
+</span></code></pre></div></div>
+
+<p><img src="output_47_0.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">waterfall</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="mi">136</span><span class="p">],</span><span class="n">show</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c1"># For the first observation
+#plt.savefig('case2.pdf', format='pdf', dpi=1200, bbox_inches='tight')
+#plt.close()
+</span></code></pre></div></div>
+
+<p><img src="output_48_0.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">waterfall</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="mi">199</span><span class="p">])</span> <span class="c1"># For the first observation
+</span><span class="n">plt</span><span class="p">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">'case3.pdf'</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s">'pdf'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1200</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">'tight'</span><span class="p">)</span>
+<span class="c1">#plt.close()
+</span></code></pre></div></div>
+
+<p><img src="output_49_0.png" alt="png" /></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;Figure size 432x288 with 0 Axes&gt;
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">shap_values</span><span class="p">.</span><span class="n">values</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">new_colums</span>
+<span class="c1">#df.to_excel('dingning_excel.xlsx')
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s">'dingning_excel.xlsx'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">df</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+<span class="n">df</span><span class="p">[</span><span class="s">'number'</span><span class="p">]</span> <span class="o">=</span> <span class="n">number</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cv</span> <span class="o">=</span> <span class="n">StratifiedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">random_state</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span>
+<span class="c1"># 交叉验证 轮数
+</span>
+<span class="n">tprs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">aucs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">mean_fpr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+<span class="c1"># ROC_5_fold
+</span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="p">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cv</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)):</span>
+    <span class="n">xgb_model</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train</span><span class="p">],</span> <span class="n">Y</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train</span><span class="p">])</span>
+    <span class="n">viz</span> <span class="o">=</span> <span class="n">RocCurveDisplay</span><span class="p">.</span><span class="n">from_estimator</span><span class="p">(</span>
+        <span class="n">xgb_model</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test</span><span class="p">],</span>
+        <span class="n">Y</span><span class="p">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test</span><span class="p">],</span>
+        <span class="n">name</span><span class="o">=</span><span class="s">"ROC fold {}"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">interp_tpr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">interp</span><span class="p">(</span><span class="n">mean_fpr</span><span class="p">,</span> <span class="n">viz</span><span class="p">.</span><span class="n">fpr</span><span class="p">,</span> <span class="n">viz</span><span class="p">.</span><span class="n">tpr</span><span class="p">)</span>
+    <span class="n">interp_tpr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">tprs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">interp_tpr</span><span class="p">)</span>
+    <span class="n">aucs</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">viz</span><span class="p">.</span><span class="n">roc_auc</span><span class="p">)</span>
+    <span class="n">mean_tpr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tprs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mean_tpr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">mean_auc</span> <span class="o">=</span> <span class="n">auc</span><span class="p">(</span><span class="n">mean_fpr</span><span class="p">,</span> <span class="n">mean_tpr</span><span class="p">)</span>
+    <span class="n">std_auc</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">aucs</span><span class="p">)</span>
+    <span class="n">std_tpr</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="n">tprs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">tprs_upper</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">mean_tpr</span> <span class="o">+</span> <span class="n">std_tpr</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">tprs_lower</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">mean_tpr</span> <span class="o">-</span> <span class="n">std_tpr</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">shap</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="p">.</span><span class="n">Explainer</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">)</span>
+<span class="n">shap_values</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">bar</span><span class="p">(</span><span class="n">shap_values</span><span class="p">,</span> <span class="n">max_display</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">show</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="c1"># default is max_display=12
+</span></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+
+
+[18:14:51] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+[18:14:51] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+[18:14:51] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+[18:14:51] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+
+
+The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+The use of label encoder in XGBClassifier is deprecated and will be removed in a future release. To remove this warning, do the following: 1) Pass option use_label_encoder=False when constructing XGBClassifier object; and 2) Encode your labels (y) as integers starting with 0, i.e. 0, 1, 2, ..., [num_class - 1].
+Use subset (sliced data) of np.ndarray is not recommended because it will generate extra copies and increase memory consumption
+
+
+[18:14:51] WARNING: C:/Users/Administrator/workspace/xgboost-win64_release_1.4.0/src/learner.cc:1095: Starting in XGBoost 1.3.0, the default evaluation metric used with the objective 'binary:logistic' was changed from 'error' to 'logloss'. Explicitly set eval_metric if you'd like to restore the old behavior.
+
+
+ntree_limit is deprecated, use `iteration_range` or model slicing instead.
+</code></pre></div></div>
+
+<p><img src="output_54_5.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># The SHAP Values
+</span><span class="kn">import</span> <span class="nn">shap</span>
+<span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="p">.</span><span class="n">Explainer</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">)</span>
+<span class="n">shap_values</span> <span class="o">=</span> <span class="n">explainer</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">bar</span><span class="p">(</span><span class="n">shap_values</span><span class="p">,</span> <span class="n">max_display</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">show</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="c1"># default is max_display=12
+</span></code></pre></div></div>
+
+<p><img src="output_55_0.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">dn_df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">shap_values</span><span class="p">.</span><span class="n">values</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">dn_df</span><span class="p">.</span><span class="n">columns</span><span class="o">=</span><span class="n">needed_col</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">dn_df</span><span class="p">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s">'dingning-all.csv'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">shap</span><span class="p">.</span><span class="n">plots</span><span class="p">.</span><span class="n">waterfall</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="mi">88</span><span class="p">])</span> <span class="c1"># For the first observation
+</span></code></pre></div></div>
+
+<p><img src="output_59_0.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">shap</span><span class="p">.</span><span class="n">summary_plot</span><span class="p">(</span><span class="n">shap_values</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><img src="output_60_0.png" alt="png" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">shap</span><span class="p">.</span><span class="n">force_plot</span><span class="p">(</span><span class="n">shap_values</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div id="iXQ27Y3IR19KF7KNNES7X">
+<div style="color: #900; text-align: center;">
+  <b>Visualization omitted, Javascript library not loaded!</b><br />
+  Have you run `initjs()` in this notebook? If this notebook was from another
+  user you must also trust this notebook (File -&gt; Trust notebook). If you are viewing
+  this notebook on github the Javascript has been stripped for security. If you are using
+  JupyterLab this error is because a JupyterLab extension has not yet been written.
+</div></div>
+<script>
+   if (window.SHAP) SHAP.ReactDom.render(
+    SHAP.React.createElement(SHAP.AdditiveForceArrayVisualizer, {"outNames": ["f(x)"], "baseValue": -0.16673818230628967, "link": "identity", "featureNames": ["Zphonedeletion", "Zonsetrime", "ZSpoonerism", "ZRANdigit", "ZRANpic", "ZRANdice", "ZRANcolor", "ZDigitSpan", "ZMA", "ZPseudoC", "ZIll-formed component", "ZIllegal position", "ZBW_drawings", "ZNumberACC", "ZSymbolACC", "ZColorACC", "ZChineseACC"], "explanations": [{"outValue": 0.9751862287521362, "simIndex": 7.0, "features": {"0": {"effect": -0.17016735672950745, "value": 0.3261019471165864}, "1": {"effect": 0.028505003079771996, "value": 0.26619837761671084}, "2": {"effect": 0.633231520652771, "value": -1.5068972925127981}, "3": {"effect": 0.3299897015094757, "value": -0.6257369174402598}, "4": {"effect": 0.1007087454199791, "value": 0.006364112990777936}, "5": {"effect": 0.029408391565084457, "value": 0.15297216219123136}, "6": {"effect": -0.3118661642074585, "value": 1.093265620479921}, "7": {"effect": 0.01758134551346302, "value": -0.10492809846955936}, "8": {"effect": 0.6980631351470947, "value": -1.0871357835106705}, "9": {"effect": 0.0003657782217487693, "value": 0.052482078493819646}, "10": {"effect": 0.008312373422086239, "value": -1.0713221810995373}, "11": {"effect": 4.821363836526871e-05, "value": 0.20033367368870683}, "12": {"effect": 0.0015729444567114115, "value": 0.29697032749782926}, "13": {"effect": -0.12615853548049927, "value": 1.1725944065761877}, "14": {"effect": 0.008276348933577538, "value": 1.726096000970435}, "15": {"effect": 0.031189648434519768, "value": 2.0472012341849215}, "16": {"effect": -0.1371367871761322, "value": 1.6685711679668367}}}, {"outValue": 1.566375970840454, "simIndex": 10.0, "features": {"0": {"effect": 0.6171315908432007, "value": -1.8975079869375957}, "1": {"effect": 0.08686800301074982, "value": -0.7459929816923448}, "2": {"effect": 0.6306580305099487, "value": -2.16523337312765}, "3": {"effect": 0.18244346976280212, "value": -0.7751757748181646}, "4": {"effect": -0.16302399337291718, "value": 0.3531436664827868}, "5": {"effect": 0.05022929981350899, "value": 0.5303210861249289}, "6": {"effect": 0.037639766931533813, "value": -0.02607880949466546}, "7": {"effect": 0.057121556252241135, "value": -1.183243617792014}, "8": {"effect": 0.4417942464351654, "value": -0.7655661383888168}, "9": {"effect": 0.020379917696118355, "value": -0.9078671869557593}, "10": {"effect": -0.011763154529035091, "value": -0.0492554730169805}, "11": {"effect": -0.02361646108329296, "value": 0.2363576761573915}, "12": {"effect": -0.0033484383020550013, "value": 0.33287248525685276}, "13": {"effect": -0.07737512141466141, "value": 0.8969351130507712}, "14": {"effect": -0.002656846307218075, "value": -0.38242845530482816}, "15": {"effect": 0.00991529319435358, "value": 0.6511155787808764}, "16": {"effect": -0.1192830353975296, "value": 1.6685711679668367}}}, {"outValue": -1.0432099103927612, "simIndex": 5.0, "features": {"0": {"effect": -0.2644018530845642, "value": 0.34518}, "1": {"effect": 0.0014227493666112423, "value": 0.36447}, "2": {"effect": -0.1800813525915146, "value": 1.1120957326535137}, "3": {"effect": -0.12759561836719513, "value": 0.77241}, "4": {"effect": -0.19730225205421448, "value": 0.635}, "5": {"effect": 0.062251996248960495, "value": 0.20915}, "6": {"effect": -0.12723664939403534, "value": 1.34422}, "7": {"effect": -0.015486192889511585, "value": 0.19438745647582123}, "8": {"effect": 0.005782981403172016, "value": 0.0087877098176451}, "9": {"effect": 0.11003578454256058, "value": -0.8556836224013781}, "10": {"effect": 0.038458291441202164, "value": 0.5928156678526247}, "11": {"effect": 0.027903759852051735, "value": 0.5900174943222254}, "12": {"effect": -0.00437256321310997, "value": 0.43661917298393804}, "13": {"effect": -0.07962048053741455, "value": 1.00925}, "14": {"effect": 0.013171927072107792, "value": 0.48007}, "15": {"effect": 0.019717548042535782, "value": 0.40663}, "16": {"effect": -0.1591198593378067, "value": 1.3011}}}, {"outValue": 1.6413278579711914, "simIndex": 9.0, "features": {"0": {"effect": 0.5212088227272034, "value": -2.79784}, "1": {"effect": 0.08091815561056137, "value": -3.35853}, "2": {"effect": 0.5443305373191833, "value": -1.411864823321232}, "3": {"effect": 0.007009697612375021, "value": 0.14519}, "4": {"effect": -0.10269992798566818, "value": 0.53673}, "5": {"effect": 0.06075523793697357, "value": 0.60544}, "6": {"effect": 0.23345081508159637, "value": -1.37612}, "7": {"effect": 0.0625806376338005, "value": -0.6922652583026043}, "8": {"effect": 0.6293450593948364, "value": -2.1713585215312414}, "9": {"effect": 0.005611044354736805, "value": 0.30503152305341685}, "10": {"effect": 0.0080135278403759, "value": 0.7141176241456568}, "11": {"effect": -0.002111987676471472, "value": 0.67388031941702}, "12": {"effect": -0.0076232850551605225, "value": 0.4408441369836165}, "13": {"effect": -0.19376398622989655, "value": 1.37161}, "14": {"effect": 0.010308243334293365, "value": 1.05939}, "15": {"effect": 0.03165701776742935, "value": 2.07666}, "16": {"effect": -0.08092367649078369, "value": 0.83899}}}, {"outValue": 1.5684386491775513, "simIndex": 3.0, "features": {"0": {"effect": -0.02175315096974373, "value": -0.31539}, "1": {"effect": 0.05769079178571701, "value": -0.897}, "2": {"effect": 0.6984411478042603, "value": -1.6213172971106455}, "3": {"effect": 0.3376517593860626, "value": -0.1821}, "4": {"effect": 0.4174260199069977, "value": -0.8155}, "5": {"effect": 0.010931978933513165, "value": 0.28975}, "6": {"effect": 0.4304549992084503, "value": -0.7552}, "7": {"effect": 0.02314276620745659, "value": -0.25365444579026625}, "8": {"effect": 0.0601569227874279, "value": -0.4989538336075067}, "9": {"effect": 0.0010866050142794847, "value": 1.0104889927756688}, "10": {"effect": 0.01937810890376568, "value": 0.6409298550141405}, "11": {"effect": -0.00871013943105936, "value": 0.6409298550141405}, "12": {"effect": -0.009457609616219997, "value": 0.4408441369836165}, "13": {"effect": -0.1593945026397705, "value": 1.37161}, "14": {"effect": 0.004957747645676136, "value": -1.33127}, "15": {"effect": -0.00023575068917125463, "value": 0.27548}, "16": {"effect": -0.12659095227718353, "value": 0.83899}}}, {"outValue": 0.6033339500427246, "simIndex": 8.0, "features": {"0": {"effect": -0.13668063282966614, "value": -0.03957}, "1": {"effect": -0.05994931608438492, "value": 0.47052}, "2": {"effect": 0.4995191991329193, "value": -1.2024123495318184}, "3": {"effect": 0.020392032340168953, "value": 0.20765}, "4": {"effect": -0.035254236310720444, "value": 0.54552}, "5": {"effect": 0.030367134138941765, "value": 0.63975}, "6": {"effect": -0.20953181385993958, "value": 0.86097}, "7": {"effect": -0.149901881814003, "value": 3.693842866820776}, "8": {"effect": 0.9191365242004395, "value": -1.2422448060180555}, "9": {"effect": -0.002891330514103174, "value": 0.1720760241320885}, "10": {"effect": 0.005981753580272198, "value": 0.6409298550141405}, "11": {"effect": 0.00047678546980023384, "value": 0.6409298550141405}, "12": {"effect": -0.003928192891180515, "value": 0.4408441369836165}, "13": {"effect": -0.05846762657165527, "value": 0.78279}, "14": {"effect": 0.032455723732709885, "value": -1.33127}, "15": {"effect": 0.00767158018425107, "value": -0.08476}, "16": {"effect": -0.08932355791330338, "value": 1.40497}}}, {"outValue": 1.1296137571334839, "simIndex": 1.0, "features": {"0": {"effect": 0.9098798036575317, "value": -2.565620718710083}, "1": {"effect": -0.10064221918582916, "value": 1.07153444825783}, "2": {"effect": -0.23462314903736115, "value": 0.6370202367015267}, "3": {"effect": 0.32970762252807617, "value": -0.513255876838312}, "4": {"effect": 0.4629468321800232, "value": -0.7316717915228289}, "5": {"effect": 0.034102290868759155, "value": 0.6636838483430268}, "6": {"effect": 0.2645060122013092, "value": -1.5938497622114547}, "7": {"effect": 0.020307239145040512, "value": -0.2789572379863285}, "8": {"effect": -0.06405647844076157, "value": 0.08518995864072422}, "9": {"effect": 0.00630118977278471, "value": 0.5703268225747656}, "10": {"effect": -0.01845550164580345, "value": -0.0492554730169805}, "11": {"effect": -0.020643629133701324, "value": 0.2363576761573915}, "12": {"effect": -0.005720329470932484, "value": 0.33287248525685276}, "13": {"effect": -0.15516671538352966, "value": 0.8969351130507712}, "14": {"effect": 0.028044672682881355, "value": 1.726096000970435}, "15": {"effect": -0.013786724768579006, "value": 0.30209416492986574}, "16": {"effect": -0.14634902775287628, "value": 1.1338495279631007}}}, {"outValue": 1.5149484872817993, "simIndex": 2.0, "features": {"0": {"effect": 0.6398298740386963, "value": -2.899677084596327}, "1": {"effect": 0.03479769825935364, "value": -1.1094984676823798}, "2": {"effect": 0.46260878443717957, "value": -2.16523337312765}, "3": {"effect": 0.39253678917884827, "value": -1.0394986076418686}, "4": {"effect": 0.32930827140808105, "value": -1.152174753148743}, "5": {"effect": 0.05229026451706886, "value": -0.3028039343198932}, "6": {"effect": 0.2539529800415039, "value": -1.4951098141747072}, "7": {"effect": 0.03450145944952965, "value": -0.7311004278891712}, "8": {"effect": -0.26520901918411255, "value": 1.4558008178248205}, "9": {"effect": -0.011910642497241497, "value": 1.3094238273400278}, "10": {"effect": -0.0032754170242697, "value": -1.8365254939188338}, "11": {"effect": -0.015684176236391068, "value": 0.2363576761573915}, "12": {"effect": -0.006035727448761463, "value": 0.33287248525685276}, "13": {"effect": -0.11817865818738937, "value": 0.8969351130507712}, "14": {"effect": 0.015179494395852089, "value": 1.0232545155453472}, "15": {"effect": -0.0006980642210692167, "value": 0.6511155787808764}, "16": {"effect": -0.11232727766036987, "value": 0.8664887079612325}}}, {"outValue": 0.20973947644233704, "simIndex": 4.0, "features": {"0": {"effect": -0.20287153124809265, "value": 0.6808272626321196}, "1": {"effect": 0.009416937828063965, "value": 0.6246647187898117}, "2": {"effect": -0.26970651745796204, "value": 0.9325194007478333}, "3": {"effect": 0.41696518659591675, "value": -0.44621131604619285}, "4": {"effect": 0.042166031897068024, "value": -0.2543576238902199}, "5": {"effect": -0.004405890125781298, "value": 1.2688383842045121}, "6": {"effect": 0.6134768724441528, "value": -0.7392555648635367}, "7": {"effect": -0.07881335914134979, "value": 2.255954117095516}, "8": {"effect": -0.13638350367546082, "value": 1.0337950090860777}, "9": {"effect": 0.02538333088159561, "value": 0.45636589994625143}, "10": {"effect": 0.09705702215433121, "value": 1.120863091208189}, "11": {"effect": 0.001417485997080803, "value": 0.20033367368870683}, "12": {"effect": 0.015603321604430676, "value": 0.29697032749782926}, "13": {"effect": -0.11730673164129257, "value": 1.1725944065761877}, "14": {"effect": -0.008560393936932087, "value": 0.3204130301202595}, "15": {"effect": 0.0556349977850914, "value": 1.3491584064828994}, "16": {"effect": -0.082595594227314, "value": 0.33176706795749655}}}, {"outValue": 0.2230202853679657, "simIndex": 6.0, "features": {"0": {"effect": -0.21525755524635315, "value": 0.44088657426610983}, "1": {"effect": 0.08769620209932327, "value": -0.3824874957023099}, "2": {"effect": -0.32440948486328125, "value": 0.6370202367015267}, "3": {"effect": -0.13639159500598907, "value": 0.58728828164584}, "4": {"effect": -0.10930651426315308, "value": 0.36821054784397583}, "5": {"effect": 0.02937287464737892, "value": 0.5162003230665421}, "6": {"effect": 0.28615236282348633, "value": -0.38812528562940307}, "7": {"effect": 0.13174328207969666, "value": -0.7311004278891712}, "8": {"effect": 0.8120863437652588, "value": -1.616322235418358}, "9": {"effect": 0.007750826422125101, "value": 0.5703268225747656}, "10": {"effect": 0.017107540741562843, "value": 0.8443795374339457}, "11": {"effect": -0.01139059942215681, "value": 0.2363576761573915}, "12": {"effect": 0.03859071806073189, "value": -0.7239976554336676}, "13": {"effect": -0.03064448945224285, "value": 0.3456165259999389}, "14": {"effect": 0.02388833463191986, "value": 1.3746752582578914}, "15": {"effect": -0.006093072704970837, "value": -0.04692724892114575}, "16": {"effect": -0.21113669872283936, "value": 1.1338495279631007}}}], "plot_cmap": "RdBu", "ordering_keys": null, "ordering_keys_time_format": null}),
+    document.getElementById('iXQ27Y3IR19KF7KNNES7X')
+  );
+</script>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+</code></pre></div></div>]]></content><author><name></name></author><summary type="html"><![CDATA[write-up.]]></summary></entry><entry><title type="html">Summary of pre-semester</title><link href="/blog/2021/summer-vacation-writeup/" rel="alternate" type="text/html" title="Summary of pre-semester" /><published>2021-08-23T15:12:00+00:00</published><updated>2021-08-23T15:12:00+00:00</updated><id>/blog/2021/summer-vacation-writeup</id><content type="html" xml:base="/blog/2021/summer-vacation-writeup/"><![CDATA[<h1 id="writeup-of-my-vacation">writeup of my vacation</h1>
+<p>:+1:</p>
+<h2 id="things-to-do">Things to do.</h2>
+<h3 id="learning">Learning</h3>
+<ul>
+  <li>Brain-related knowledge and tools.
+– <em>eeglab / python-mne</em></li>
+</ul>
+
+<p>Resources：</p>
+
+<p><a href="https://mne.tools">Python-mne offical documentation</a></p>
+
+<p><a href="https://zhuanlan.zhihu.com/p/128667251">中文学习资料</a> 知乎收集。</p>
+
+<p><a href="https://github.com/hoechenberger/pybrain_mne/">Pybrain 2020: M/EEG analysis with MNE-Python(newest!)</a> with video and jupyter notebook! awesome.</p>
+
+<p>eeglab 和 python mne 均是在脑电处理领域较为广泛使用的包，功能丰富，拓展性强。因为自身对于python的熟悉度，便开始试图掌握此工具，为未来的研究做好准备。</p>
+
+<blockquote>
+  <p>MNE - MEG + EEG ANALYSIS &amp; VISUALIZATION is a Open-source Python package for exploring, visualizing, and analyzing human neurophysiological data: MEG, EEG, sEEG, ECoG, NIRS, and more.</p>
+</blockquote>
+
+<p>A simple example of time-frequency analysis in mne</p>
+
+<p>使用morlet小波变换</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">mne</span>
+<span class="n">frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">power</span> <span class="o">=</span> <span class="n">mne</span><span class="p">.</span><span class="n">time_frequency</span><span class="p">.</span><span class="n">tfr_morlet</span><span class="p">(</span><span class="n">aud_epochs</span><span class="p">,</span> <span class="n">n_cycles</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">return_itc</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                      <span class="n">freqs</span><span class="o">=</span><span class="n">frequencies</span><span class="p">,</span> <span class="n">decim</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">power</span><span class="p">.</span><span class="n">plot</span><span class="p">([</span><span class="s">'MEG 1332'</span><span class="p">])</span>
+</code></pre></div></div>
+<hr />
+
+<h1 id="learning-1">Learning</h1>
+<ul>
+  <li>Machine learning - related tools and knowledge
+– tensorflow &amp; keras (hard!! as hell)
+– pytroch</li>
+</ul>
+
+<p>Resources：</p>
+
+<p><a href="https://github.com/Atcold/pytorch-Deep-Learning">Pytorch Deep learning</a> the greatest course from NYU, with detailed video explaination, slide, and code example.</p>
+
+<p><a href="https://github.com/manujosephv/pytorch_tabular">Pytorch-tabular</a> quickly hands on, cause many datas in our research are just sheets.</p>
+
+<p><a href="https://github.com/fastai/fastai">Fastai</a> pytorch-based lib for deep learning, easy to use and replicate.</p>
+
+<p>快速掌握基础的机器学习相关理论和方法，对于进一步将其应用于语音研究很有必要，故而在假期中，通过上述的学习资源，补足和完善了自己的理论知识，同时提高了动手实践能力。</p>
+
+<p>Troubleshooting：</p>
+
+<p>深度学习框架的主流使用 包含 Keras/tensorflow-backend 和pytorch,其中 torch的使用较为便捷，只需要对应的CUDA版本安装即可。tensorflow的研究历史较长，大量的更新迭代后，多种公式，调用都有变化，复现前人的代码常常容易出现bug</p>
+
+<h3 id="bug1-could-not-interpret-optimizer-identifier-error-in-keras">bug1 “Could not interpret optimizer identifier” error in Keras</h3>
+<p>原因是模型(model)和层(layers)使用tensorflow.python.keras(或者tensorflow.keras) API，优化器optimizer（SGD, Adam等）使用keras.optimizers，或者反之。</p>
+
+<p>这是两个不同的keras版本，放在一起无法工作，需要把他们统一到同一版本。优化器和模型必须来自相同的层，相同的keras。</p>
+
+<p>调用过程中 需要使用完全一致的包环境</p>
+
+<p>如</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">optimizers</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">optimizers</span>
+<span class="c1"># 不同的调用需要统一
+</span>
+<span class="n">model</span><span class="p">.</span><span class="n">complie</span><span class="p">(</span><span class="s">''</span><span class="p">)</span> <span class="c1"># 此时可以使用名称 而非调用。
+</span><span class="n">model</span><span class="p">.</span><span class="n">complie</span><span class="p">(</span><span class="n">optimizers</span> <span class="o">=</span> <span class="s">'Adam'</span><span class="p">)</span><span class="c1"># etc
+</span></code></pre></div></div>
+
+<h3 id="bug2-tensorflow很容易出现内存不足的bug">bug2 “tensorflow很容易出现内存不足的bug”</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />解决方法
+限制内存和内存动态使用都需要tf的1版本才行，使用如下公式可解决</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="n">tf</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="p">.</span><span class="n">compat</span><span class="p">.</span><span class="n">v1</span><span class="p">.</span><span class="n">ConfigProto</span><span class="p">()</span>
+<span class="n">config</span><span class="p">.</span><span class="n">gpu_options</span><span class="p">.</span><span class="n">allow_growth</span><span class="o">=</span><span class="bp">True</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="p">.</span><span class="n">compat</span><span class="p">.</span><span class="n">v1</span><span class="p">.</span><span class="n">Session</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="bug3-cudacudnn-在3060下的配置">bug3 CUDA/cuDnn 在3060下的配置</h3>
+
+<ol>
+  <li>tensorflow 2.6.0</li>
+  <li>CUDA 11.1</li>
+  <li>CuDnn 8.05</li>
+</ol>
+
+<p>保证三者完美兼容才可运行程序。
+! 其他可能的原因 maybe 遇到</p>
+
+<ol>
+  <li>
+    <p>You have cache issues
+I regularly work around this error by shutting down my python process, removing the ~/.nv directory (on linux, rm -rf ~/.nv), and restarting the Python process. I don’t exactly know why this works. It’s probably at least partly related to the second option:</p>
+  </li>
+  <li>
+    <p>You’re out of memory
+The error can also show up if you run out of graphics card RAM. With an nvidia GPU you can check graphics card memory usage with nvidia-smi. This will give you a readout of how much GPU RAM you have in use (something like 6025MiB /  6086MiB if you’re almost at the limit) as well as a list of what processes are using GPU RAM.</p>
+  </li>
+</ol>
+
+<p>reducing your batch size
+using a simpler model
+using less data
+limit TensorFlow GPU memory fraction: For example, the following will make sure TensorFlow uses &lt;= 90% of your RAM:</p>
+
+<p>import keras
+import tensorflow as tf</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 配合版本
+</span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="n">tf</span>
+<span class="kn">from</span> <span class="nn">tensorflow.compat.v1.keras.backend</span> <span class="kn">import</span> <span class="n">set_session</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="p">.</span><span class="n">compat</span><span class="p">.</span><span class="n">v1</span><span class="p">.</span><span class="n">ConfigProto</span><span class="p">()</span>
+<span class="n">config</span><span class="p">.</span><span class="n">gpu_options</span><span class="p">.</span><span class="n">allow_growth</span> <span class="o">=</span> <span class="bp">True</span>  <span class="c1"># dynamically grow the memory used on the GPU
+</span><span class="n">config</span><span class="p">.</span><span class="n">log_device_placement</span> <span class="o">=</span> <span class="bp">True</span>  <span class="c1"># to log device placement (on which device the operation ran)
+</span><span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="p">.</span><span class="n">compat</span><span class="p">.</span><span class="n">v1</span><span class="p">.</span><span class="n">Session</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<span class="n">set_session</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+</code></pre></div></div>
+<ol>
+  <li>You have incompatible versions of CUDA, TensorFlow, NVIDIA drivers, etc.
+If you’ve never had similar models working, you’re not running out of VRAM and your cache is clean, I’d go back and set up CUDA + TensorFlow using the best available installation guide - I have had the most success with following the instructions at https://www.tensorflow.org/install/gpu rather than those on the NVIDIA / CUDA site. Lambda Stack is also a good way to go.</li>
+</ol>
+
+<p>有用的代码</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">[</span><span class="s">'TF_FORCE_GPU_ALLOW_GROWTH'</span><span class="p">]</span> <span class="o">=</span> <span class="s">'true'</span>
+</code></pre></div></div>
+
+<p>!TODO
+tensorflow 和 pytorch 的代码互相转换。
+:+1:
+:rocket:</p>
+
+<p>:sparkle:</p>
+<h1 id="experiment">Experiment</h1>
+
+<p>TODO -&gt; Tone-related experiment by using Deep learning.</p>
+
+<p>Experiment One:</p>
+
+<p>Mandarin tone classfication by using CNN, similar to <a href="https://www.isca-speech.org/archive/Interspeech_2019/pdfs/1483.pdf"><strong>ToneNet</strong> - interspeech2019</a></p>
+
+<p>Experment Two :</p>
+
+<p>Re-implimentation of <a href="https://arxiv.org/abs/2106.15123">FastPitchFormant -interspeech2021</a>
+<strong>FastPitchFormant: Source-filter based Decomposed Modeling for Speech Synthesis</strong></p>
+
+<blockquote>
+  <p>Synthesized speech with a large
+pitch-shift scale suffers from audio quality degradation, and
+speaker characteristics deformation.</p>
+</blockquote>
+
+<p>语音合成中，合成的语音往往存在较大的pitch-shift，从而导致音质的下降和话者信息的变现。作者提出了一种feed-forward Transformer based TTS model的方法，用来生成鲁棒且准确的音高韵律特征，提升语音合成的自然度。</p>
+
+<p>To be countinued…. See in next post.</p>]]></content><author><name></name></author><summary type="html"><![CDATA[write-up.]]></summary></entry><entry><title type="html">CNN model for Mandarin tone classfication</title><link href="/blog/2021/tone_classficiation/" rel="alternate" type="text/html" title="CNN model for Mandarin tone classfication" /><published>2021-08-22T15:12:00+00:00</published><updated>2021-08-22T15:12:00+00:00</updated><id>/blog/2021/tone_classficiation</id><content type="html" xml:base="/blog/2021/tone_classficiation/"><![CDATA[<style>
+img{
+    width: 80%;
+    padding-left: 20%;
+}
+</style>
+
+<h2 id="今日总结">今日总结</h2>
+
+<blockquote>
+  <p>tensorflow is <em>hard</em> as hell</p>
+</blockquote>
+
+<p>今日试图 复现 deep learning method for tone classficiation
+ToneNet (https://github.com/saber5433/ToneNet)。</p>
+<h3 id="现阶段-单音节的-声调识别已经相当完善了主要有论文">现阶段 单音节的 声调识别已经相当完善了，主要有论文</h3>
+
+<p><strong>Tonenet</strong> 发表于 interspeech 2019 @Gaoqing<br />
+  在单音节的标准发音上，可以达到百分之99以上的识别率
+主要思路是使用多种参数，例如pitch-related, spectragom, mel-spectragom.<br />
+作者使用了CASS语料库，即中文标准音节发音语料库，因为商业性(费用约2000元)暂时搁置，此类语料库也有<em>Tone Perfect dataset from Michigan State University</em> (https://tone.lib.msu.edu/).</p>
+<blockquote>
+  <p>The Tone Perfect collection includes the full catalog of monosyllabic sounds in Mandarin Chinese (410 in total) in all four tones (410 x 4 = 1,640). Spoken by six native Mandarin speakers (three female and three male), the collection is comprised of 9,860 audio files (6 sets of 1,640).  如图所示为该语料库所提供的标准范例。
+<img src="/assets/img/tone_perfect.png" alt="tone_perfect" /></p>
+</blockquote>
+
+<p>使用该数据库需要先填写申请表，已经提交，但尚未有工作人员回应，继续等待中。</p>
+
+<p>故而先行使使用BLCU-SAIT的小部分语料库中的单音节，总计约10000条不同的语音片段，来自3男3女，每位发音人产出1520个不同声调的单音节。
+数据量和前人的实验研究向符合。</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />使用python可以较为方便的提取不同层级的声学特征</li>
+</ul>
+
+<p><em>Note</em> 因为使用深度学习进行的序列建模中，输入的参数维度是需要保持一致，但音频本身的时长不一，所以大多数的研究方法是进行padding，即补零到最长的音频时长，因为录音细节的问题，部分音节的时长过长，约3-5s 增加了计算量，故而先行对数据进行trim (即 去除首 尾 部分的静音段 )</p>
+
+<pre><code class="language-Python"># Load some audio
+y, sr = librosa.load(librosa.ex('choice'))
+# Trim the beginning and ending silence
+yt, index = librosa.effects.trim(y)
+# 可选参数包括：
+# top_dbnumber &gt; 0 The threshold (in decibels) below reference to consider silence !重要
+# Print the durations
+print(librosa.get_duration(y), librosa.get_duration(yt))
+25.025986394557822 25.007891156462584
+
+</code></pre>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">librosa</span>
+<span class="c1"># 提取 频谱特征；
+</span><span class="n">mel1</span> <span class="o">=</span> <span class="n">librosa</span><span class="p">.</span><span class="n">feature</span><span class="p">.</span><span class="n">melspectrogram</span><span class="p">(</span><span class="n">audio1</span><span class="p">,</span> <span class="n">sr</span><span class="o">=</span><span class="n">sample_rate1</span><span class="p">,</span> <span class="n">n_fft</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">hop_length</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">n_mels</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">fmin</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">fmax</span><span class="o">=</span><span class="mi">3700</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">log10</span><span class="p">(</span><span class="n">mel1</span> <span class="o">+</span> <span class="mf">1e-10</span><span class="p">),</span> <span class="n">aspect</span><span class="o">=</span><span class="s">'auto'</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="p">.</span><span class="n">plasma</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">mel1</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+
+</code></pre></div></div>
+<p><img src="/assets/img/mel.png" alt="mel" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">librosa</span>
+<span class="c1"># 提取 mfcc
+</span><span class="n">mfcc</span> <span class="o">=</span> <span class="n">librosa</span><span class="p">.</span><span class="n">feature</span><span class="p">.</span><span class="n">mfcc</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">audio1</span><span class="p">,</span> <span class="n">sr</span><span class="o">=</span><span class="n">sample_rate1</span><span class="p">,</span> <span class="n">n_mfcc</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mfcc</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s">'auto'</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="p">.</span><span class="n">viridis</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></div>
+<p><img src="/assets/img//mfcc.png" alt="mfcc" />
+tone1</p>
+
+<p><img src="/assets/img//tone_3.png" alt="mfcc" />
+tone3</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 使用librosa自带的框架提取 音高 TODO 可变化
+# e.g. pyworld / cnn pitch
+</span><span class="n">pitch</span><span class="p">,</span> <span class="n">mag</span> <span class="o">=</span> <span class="n">librosa</span><span class="p">.</span><span class="n">core</span><span class="p">.</span><span class="n">piptrack</span><span class="p">(</span><span class="n">audio1</span><span class="p">,</span> <span class="n">sr</span><span class="o">=</span><span class="n">sample_rate1</span><span class="p">,</span> <span class="n">n_fft</span><span class="o">=</span><span class="mi">512</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">pitch</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s">'auto'</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">ylim</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">100</span><span class="p">])</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></div>
+<p><img src="/assets/img//pitch.png" alt="pitch" /></p>
+
+<p>如图可见为不同方法是声调表征，从直观视觉，mfcc更贴合实际的声调轮廓。</p>
+
+<p>数据准备</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># import some necessary packages
+</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="n">tf</span>
+<span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">MaxPooling2D</span><span class="p">,</span> <span class="n">BatchNormalization</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span> <span class="nn">keras.datasets</span> <span class="kn">import</span> <span class="n">mnist</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span>
+<span class="kn">from</span> <span class="nn">keras.layers.core</span> <span class="kn">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Flatten</span>
+<span class="kn">from</span> <span class="nn">keras.layers.convolutional</span> <span class="kn">import</span> <span class="n">Convolution2D</span><span class="p">,</span> <span class="n">MaxPooling2D</span>
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">np_utils</span>
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">to_categorical</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># 定义模型
+</span><span class="k">def</span> <span class="nf">get_cnn_model</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s">'relu'</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">BatchNormalization</span><span class="p">())</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">48</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s">'relu'</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">BatchNormalization</span><span class="p">())</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s">'relu'</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">BatchNormalization</span><span class="p">())</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.25</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Flatten</span><span class="p">())</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s">'relu'</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.25</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s">'relu'</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.4</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s">'softmax'</span><span class="p">))</span>
+    <span class="n">model</span><span class="p">.</span><span class="nb">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">keras</span><span class="p">.</span><span class="n">losses</span><span class="p">.</span><span class="n">categorical_crossentropy</span><span class="p">,</span>
+                  <span class="n">optimizer</span><span class="o">=</span><span class="n">keras</span><span class="p">.</span><span class="n">optimizers</span><span class="p">.</span><span class="n">Adadelta</span><span class="p">(),</span>
+                  <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s">'accuracy'</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">model</span>
+</code></pre></div></div>
+<p>为了更方便的理解模型，可使用 model.summary ( After training.)</p>
+
+<p>数据预处理中，使用liborsa提取mfcc参数，此处提取60维mfcc参数，对全部语音进行首尾静音段的切除，最后padding到150帧，最后将数据转换为np.array并保存。最终训练数据 维度为（9199,60,150,1)</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">wav2mfcc</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">max_pad</span><span class="p">):</span>
+  <span class="c1"># 使用librosa读取音频时，可能遇到soundfile的依赖错误，此时可以选择重新安装soundfile包，或直接使用soundfile进行读取，读取后的音频 audio 和 sample rate 和 librosa无差异。
+</span>  <span class="c1">#audio, sample_rate = librosa.core.load(file_path)
+</span>  <span class="n">mfcc</span> <span class="o">=</span> <span class="n">librosa</span><span class="p">.</span><span class="n">feature</span><span class="p">.</span><span class="n">mfcc</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">audio</span><span class="p">,</span> <span class="n">sr</span><span class="o">=</span><span class="n">sample_rate</span><span class="p">,</span> <span class="n">n_mfcc</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+  <span class="n">pad_width</span> <span class="o">=</span> <span class="n">max_pad</span> <span class="o">-</span> <span class="n">mfcc</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+  <span class="n">mfcc</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="n">mfcc</span><span class="p">,</span> <span class="n">pad_width</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">)),</span> <span class="n">mode</span><span class="o">=</span><span class="s">'constant'</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">mfcc</span>
+</code></pre></div></div>
+<p>对 数据标签进行one-hot编码，即 将1 2 3 4 的离散数值，转换为 [0,0,0,0,1] [0,0,0,1,0] [0,0,1,0,0] [0,1,0,0,] 可以使用 keras自带的 to_categorical</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">to_categorical</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="n">to_categorical</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">labels</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>训练和测试</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">get_cnn_model</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+
+<span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="n">class_weights</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>最终结果 ：</p>
+
+<p>模型
+<img src="/assets/img/model-summary.png" alt="model" /></p>
+
+<p>测试集上的混淆矩阵</p>
+
+<p><img src="/assets/img/confus.png" alt="conf" /></p>
+
+<p>基本上训练的很好，但是可能有点过拟合了哈，不知道集外的数据如何。</p>
+
+<p>试图使用gradio制作一个可交互app</p>
+<blockquote>
+  <p>Generate an easy-to-use demo for your ML model or function with only a few lines of code.</p>
+</blockquote>
+
+<p><img src="/assets/img/screenshot.png" alt="app" /></p>
+
+<!--
+<div  align="center">    
+
+<img alt="screenshot.png" src="/assets/img/screenshot.png" width="600" height="600">
+
+</div> -->]]></content><author><name></name></author><summary type="html"><![CDATA[some notes.]]></summary></entry></feed>
